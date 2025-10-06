@@ -17,7 +17,8 @@ class NYC311Database:
                 FROM read_parquet('{self.data_path}', union_by_name=True)
             """)
         else:
-            self.connection = duckdb.connect("nyc311_read.duckdb", read_only=True)
+            self.connection = duckdb.connect(':memory:')
+            self.connection.execute("IMPORT DATABASE 'nyc311_snapshot'")
             ""
 
     def query_data_as_df(self, query: str):
