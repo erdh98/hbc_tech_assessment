@@ -8,8 +8,8 @@ This project analyzes and predicts complaint calls in NYC 311 data to inform cit
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/<your-username>/hbc-assessment.git
-cd hbc-assessment
+git clone https://github.com/erdh98/hbc_tech_assessment.git
+cd hbc_tech_assessment
 ```
 ### 2. Install Poetry
 ```bash
