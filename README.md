@@ -3,7 +3,9 @@
 This project analyzes and predicts complaint calls in NYC 311 data to inform city resource allocation.
 
 ---
-
+## Prerequisites
+1. Python >= 3.10
+2. Poetry
 ## Project Setup
 
 ### 1. Clone the repository + change directory
