@@ -1,0 +1,30 @@
+[project]
+name = "hbc-assessment"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Emma", email = "erdavies98@gmail.com" }]
+dependencies = [
+  "jupyter>=1.1.1,<2.0.0",
+  "pandas>=2.3.3,<3.0.0",
+  "pyarrow (>=21.0.0,<22.0.0)",
+  "aiohttp (>=3.12.15,<4.0.0)",
+  "path (>=17.1.1,<18.0.0)",
+  "pathlib (>=1.0.1,<2.0.0)",
+  "duckdb (>=1.4.0,<2.0.0)",
+  "sentence-transformers (>=5.1.1,<6.0.0)",
+  "matplotlib (>=3.10.6,<4.0.0)",
+  "plotly (>=6.3.1,<7.0.0)",
+  "statsmodels (>=0.14.5,<0.15.0)",
+  "xgboost (>=3.0.5,<4.0.0)",
+  "seaborn (>=0.13.2,<0.14.0)"
+]
+
+[tool.poetry]
+# Poetry-specific settings go here (even when using [project])
+packages = [{ include = "etl", from = "src" }, {include="eda", from="src"}]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
