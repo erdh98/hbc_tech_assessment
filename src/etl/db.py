@@ -3,18 +3,29 @@ import duckdb
 from pathlib import Path    
 import yaml
 import etl.utils as utils
+import os
 
 class NYC311Database:
 
-    def __init__(self, initialize: bool = True):
-        self.data_path = str(Path.cwd().parent) + "/" + "data/311_requests/**/*.parquet"  
+    def __init__(self, key, secret, initialize: bool = True):
+        self.data_path = str(Path.cwd().parent) + "/" + "data/311_requests/**/borough=*/*.parquet"  
         self.table_name = "nyc311"
         if initialize:
             self.connection = duckdb.connect("nyc311.duckdb")
             self.connection.execute(f"""
-                CREATE OR REPLACE TABLE {self.table_name} AS
+                PRAGMA threads=8;
+                PRAGMA memory_limit='16GB';
+                CREATE OR REPLACE SECRET secret (
+                    TYPE s3,
+                    PROVIDER config,
+                    KEY_ID {key},
+                    SECRET {secret},
+                    REGION 'us-east-2',
+                    ENDPOINT 's3.us-east-2.amazonaws.com'
+                );
+                CREATE OR REPLACE TABLE nyc311 AS
                 SELECT *
-                FROM read_parquet('{self.data_path}', union_by_name=True)
+                FROM read_parquet('s3://hbc-assessment/grouped/by_borough/borough=*/*.parquet', union_by_name=True);
             """)
         else:
             self.connection = duckdb.connect(':memory:')

@@ -18,9 +18,10 @@ API_MIN_DATE = "2010-01-01T00:00:00.000"
 
 
 class NYC311RequestAPI:
-    def __init__(self, url:str, api_token:str | None=None):
+    def __init__(self, url:str, api_token:str | None=None, keys:list | None=None):
         self.url = url
         self.api_token = api_token
+        self.keys = keys
 
     def chunk_request(self, where_query, chunk_num):
         """ Requests a chunk of data from the API based on the where_query. 
@@ -78,7 +79,7 @@ class NYC311RequestAPI:
         if query_latest_data:
 
             print("Creating DB connection to check latest data")
-            db = NYC311Database()
+            db = NYC311Database(key=self.keys[0], secret=self.keys[1])
             query_min_date = db.query_data_as_df("SELECT MAX(created_date) as max_date FROM nyc311")['max_date'].loc[0]
             self.existing_db = db
         else:
@@ -91,6 +92,7 @@ class NYC311RequestAPI:
             query_min_date = API_MIN_DATE
         print("Requesting all data since {} unil {}".format(query_min_date, current_time))
         self.request_api_data(query_min_date)
+        return db
         
 
     
