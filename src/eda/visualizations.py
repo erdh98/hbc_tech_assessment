@@ -4,8 +4,11 @@ from statsmodels.graphics.tsaplots import plot_acf
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import numpy as np
 import pandas as pd
+import duckdb
 
-def get_noise_complaint_heatmap(data):
+
+def get_noise_complaint_heatmap(db):
+    data = db.get_bronx_ts_granular()
     days_map = {0:'M',1:'T',2:'W',3:'Th',4:'F',5:'Sat',6:'Sun'}
 
     df = data.sort_values("created_date_trunc").copy()
@@ -23,7 +26,12 @@ def get_noise_complaint_heatmap(data):
     plt.show()
 
 
-def highlight_summer_spikes(data):
+def highlight_summer_spikes(db):
+    data = db.get_bronx_timeseries()
+    data['month'] = data['created_date_trunc'].dt.month
+    data['summer'] = data['month'].isin([6,7,8,9])
+
+
     plt.figure(figsize=(10,5))
     plt.scatter(data['created_date_trunc'], 
         data['complaint_count'],
@@ -35,16 +43,19 @@ def highlight_summer_spikes(data):
     plt.ylabel("Complaint count")
     plt.show()
 
-def get_nyc_complaint_map(data):
+def get_nyc_complaint_map(db):
+    lat_long_data = db.connection.execute('SELECT latitude, longitude FROM nyc311;').df()
+    lat_long_data = lat_long_data[lat_long_data.latitude > 1]
     plt.figure(figsize=(10,8))
-    plt.hexbin(data["longitude"], data["latitude"], gridsize=300, cmap="inferno", bins="log")
+    plt.hexbin(lat_long_data["longitude"], lat_long_data["latitude"], gridsize=300, cmap="inferno", bins="log")
     plt.colorbar(label="log(count)")
     plt.title("NYC 311 Complaints Density (All years)")
     plt.xlabel("Longitude")
     plt.ylabel("Latitude")
     plt.show()
 
-def get_acf_plot(data):
+def get_acf_plot(db):
+    data = db.get_bronx_timeseries()
     autocorr = data.set_index('created_date_trunc').sort_index()[['complaint_count']]
 
     fig, axes = plt.subplots(1, 1, figsize=(10, 4))
@@ -53,7 +64,8 @@ def get_acf_plot(data):
     axes.set_xticks(np.arange(1,31,2))
     plt.show();
 
-def get_ts_proportions(data):
+def get_ts_proportions(db):
+    data = db.get_complaint_time_series()
     data.pivot_table(index='year',columns='borough', values='complaints_per_capita').plot(figsize=(10,5), title='Calls per resident over time');
 
 def get_confusion_matrix(y_test, y_pred):

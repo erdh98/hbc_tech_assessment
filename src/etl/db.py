@@ -6,16 +6,19 @@ import etl.utils as utils
 
 class NYC311Database:
 
-    def __init__(self):
-        self.connection = duckdb.connect("nyc311.duckdb")
+    def __init__(self, initialize: bool = True):
         self.data_path = str(Path.cwd().parent) + "/" + "data/311_requests/**/*.parquet"  
         self.table_name = "nyc311"
-
-        self.connection.execute(f"""
-            CREATE OR REPLACE TABLE {self.table_name} AS
-            SELECT *
-            FROM read_parquet('{self.data_path}', union_by_name=True)
-        """)
+        if initialize:
+            self.connection = duckdb.connect("nyc311.duckdb")
+            self.connection.execute(f"""
+                CREATE OR REPLACE TABLE {self.table_name} AS
+                SELECT *
+                FROM read_parquet('{self.data_path}', union_by_name=True)
+            """)
+        else:
+            self.connection = duckdb.connect("nyc311_read.duckdb", read_only=True)
+            ""
 
     def query_data_as_df(self, query: str):
         result = self.connection.execute(query).df()
