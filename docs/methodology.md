@@ -48,12 +48,19 @@ I considered both real-world applications and model accuracy when deciding on a 
     - In order to improve model estimations, I found the optimal probability threshold when classifying as a high complaint day or normal day. 
     - This threshold is optimized by finding the highest precision and highest recall possible.
     - Modifying this threshold improves precision, recall, AUC, and TP/FPs. 
+    - Response variable:
+        - 1 = high complaint period, 0 = normal period 
+        - High complaint period is defined as having complaint count in the 70th percentile. These percentiles are estimated each year because complaints have been increasing over recent years (either due to more calls or better data logging), so earlier periods would be over classified if using a percentile on the entire set. 
 - **Features:** 
     - The goal in defining the features is to also keep interpretibility in mind, otherwise it is difficult to say exactly when/where more resources should be staffed
     - I first visualized the patterns in the data and thought about what might be causing them (e.g. cyclical spikes, hotter months = more complaints?)
     - I then tested these hypotheses through slicing the data by  months, weekends, times of days etc. to confirm the patterns
     - I also calculated Z-scores to get and idea of what is being flagged as an anamoly to help inform features 
     - Combining encoded qualitative features (time of day, summer, weekend) with a quantitative feature (7-day lagged complaint counts) allow for different patterns in the data to be identified and modelled. The qualitative and quantitative features capture different elements of the data that just one type could not capture alone. 
+- **Training and testing**
+    - Since this dataset is a timeseries, I split up the data ordered by created_date (cannot do random shuffling with time series data as it will introduce data leakage)
+    - 70/30 train/test split to ensure that there is a sufficient number of both classes in the sets
+    - Trained on earlier data, predicted on recent data to replicate how this model would actually be used going forward 
 - **Efficacy**
     - To measure efficacy, I considered the connection to the real-world problem being solved. Does this model clearly inform staffing concerns? How to translate this to an audience?
     - First, I checked the false/true positives with a confusion matrix and precision/recall. This shows how well the model identifies high complaint days, which is primarily what is needed for the city agency. 
@@ -69,3 +76,6 @@ I considered both real-world applications and model accuracy when deciding on a 
 - I intentionally chose to focus on the Bronx and noise complaints.
     - This is the borough with the most calls and the type of complaint with the most calls. Because resourcing is limited, my goal was to zero in on an area/type with a particularly high issue. 
     - However, in future states, it would be interesting to see how these patterns persist in other boroughs and in other complaint types.  
+- Model enhancements
+    - Since noise complaint surges are relatively rare, the model could be biased towards the "normal complaint period" classification
+    - We could introduce sample weighting in a future model to prevent bias and to identify even rarer surges to narrow down when to further increase resources 
