@@ -7,26 +7,37 @@ import os
 
 class NYC311Database:
 
-    def __init__(self, key, secret, initialize: bool = True):
+    def __init__(self, initialize: bool = True):
         self.data_path = str(Path.cwd().parent) + "/" + "data/311_requests/**/borough=*/*.parquet"  
         self.table_name = "nyc311"
         if initialize:
             self.connection = duckdb.connect("nyc311.duckdb")
-            self.connection.execute(f"""
+            import os
+            path_to_save = str(Path.cwd().parent) + "/" + "data/grouped/by_borough"
+            path_w_parquet = path_to_save + "/borough=*/**/*.parquet"
+            os.makedirs(path_to_save, exist_ok=True)
+            self.connection.execute(
+                f''' 
                 PRAGMA threads=8;
                 PRAGMA memory_limit='16GB';
-                CREATE OR REPLACE SECRET secret (
-                    TYPE s3,
-                    PROVIDER config,
-                    KEY_ID {key},
-                    SECRET {secret},
-                    REGION 'us-east-2',
-                    ENDPOINT 's3.us-east-2.amazonaws.com'
+                COPY (
+                SELECT *
+                FROM read_parquet('{self.data_path}', union_by_name=True)
+                
+                ) TO '{path_to_save}'
+                (
+                FORMAT PARQUET,
+                COMPRESSION ZSTD,
+                ROW_GROUP_SIZE 1000000,        
+                PARTITION_BY  'borough'        
                 );
+            
                 CREATE OR REPLACE TABLE nyc311 AS
                 SELECT *
-                FROM read_parquet('s3://hbc-assessment/grouped/by_borough/borough=*/*.parquet', union_by_name=True);
-            """)
+                FROM read_parquet('{path_w_parquet}', union_by_name=True);
+            ''')
+
+            
         else:
             self.connection = duckdb.connect(':memory:')
             self.connection.execute("IMPORT DATABASE 'nyc311_snapshot'")
