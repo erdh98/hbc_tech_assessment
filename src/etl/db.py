@@ -15,27 +15,42 @@ class NYC311Database:
             import os
             path_to_save = str(Path.cwd().parent) + "/" + "data/grouped/by_borough"
             path_w_parquet = path_to_save + "/borough=*/**/*.parquet"
-            os.makedirs(path_to_save, exist_ok=True)
-            self.connection.execute(
-                f''' 
-                PRAGMA threads=8;
-                PRAGMA memory_limit='16GB';
-                COPY (
-                SELECT *
-                FROM read_parquet('{self.data_path}', union_by_name=True)
-                
-                ) TO '{path_to_save}'
-                (
-                FORMAT PARQUET,
-                COMPRESSION ZSTD,
-                ROW_GROUP_SIZE 1000000,        
-                PARTITION_BY  'borough'        
-                );
-            
-                CREATE OR REPLACE TABLE nyc311 AS
-                SELECT *
-                FROM read_parquet('{path_w_parquet}', union_by_name=True);
-            ''')
+            file_path = Path(path_to_save)
+
+            if file_path.exists():
+                print('Parquets already exist')
+                self.connection.execute(
+                    f''' 
+
+                    CREATE OR REPLACE TABLE nyc311 AS
+                    SELECT *
+                    FROM read_parquet('{path_w_parquet}', union_by_name=True);
+                ''')
+            else:
+                print("Regrouping parquets for quicker data loading")
+                os.makedirs(path_to_save, exist_ok=True)
+                self.connection.execute(
+                    f''' 
+                    PRAGMA threads=8;
+                    PRAGMA memory_limit='16GB';
+                    COPY (
+                    SELECT *
+                    FROM read_parquet('{self.data_path}', union_by_name=True)
+                    
+                    ) TO '{path_to_save}'
+                    (
+                    FORMAT PARQUET,
+                    COMPRESSION ZSTD,
+                    ROW_GROUP_SIZE 1000000,        
+                    PARTITION_BY  'borough'        
+                    );
+                ''')
+                self.connection.execute(
+                    f''' 
+                    CREATE OR REPLACE TABLE nyc311 AS
+                    SELECT *
+                    FROM read_parquet('{path_w_parquet}', union_by_name=True);
+                ''')
 
             
         else:
