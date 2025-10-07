@@ -38,8 +38,9 @@ poetry run jupyter notebook
 Kernel → Change Kernel → Python (hbc_tech_assessment)
 
 ## Notebooks
-1. Ensure both notebooks are connected to the kernel `Python (hbc_tech_assesment)`
+1. Ensure ETL + EDA.ipynb is connected to the kernel: `Python (hbc_tech_assesment)`
 2. Run ETL + EDA.ipynb <u><b>first</b></u>
-3. Run Final report.ipynb
+3. Connect Final report.ipynb to the ETL + EDA.ipynb kernel (ensures that modified database transfers)
+4. Run Final report.ipynb
 
 
