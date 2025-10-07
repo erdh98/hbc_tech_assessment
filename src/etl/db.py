@@ -4,28 +4,24 @@ from pathlib import Path
 import yaml
 import etl.utils as utils
 import os
+import gc
 
 class NYC311Database:
 
     def __init__(self, initialize: bool = True):
         self.data_path = str(Path.cwd().parent) + "/" + "data/311_requests/**/borough=*/*.parquet"  
         self.table_name = "nyc311"
+
         if initialize:
             self.connection = duckdb.connect("nyc311.duckdb")
             import os
             path_to_save = str(Path.cwd().parent) + "/" + "data/grouped/by_borough"
             path_w_parquet = path_to_save + "/borough=*/**/*.parquet"
             file_path = Path(path_to_save)
+            
 
             if file_path.exists():
                 print('Parquets already exist')
-                self.connection.execute(
-                    f''' 
-
-                    CREATE OR REPLACE TABLE nyc311 AS
-                    SELECT *
-                    FROM read_parquet('{path_w_parquet}', union_by_name=True);
-                ''')
             else:
                 print("Regrouping parquets for quicker data loading")
                 os.makedirs(path_to_save, exist_ok=True)
@@ -45,18 +41,11 @@ class NYC311Database:
                     PARTITION_BY  'borough'        
                     );
                 ''')
-                self.connection.execute(
-                    f''' 
-                    CREATE OR REPLACE TABLE nyc311 AS
-                    SELECT *
-                    FROM read_parquet('{path_w_parquet}', union_by_name=True);
-                ''')
-
             
         else:
             self.connection = duckdb.connect(':memory:')
-            self.connection.execute("IMPORT DATABASE 'nyc311_snapshot'")
-            ""
+    
+
 
     def query_data_as_df(self, query: str):
         result = self.connection.execute(query).df()
@@ -265,7 +254,7 @@ class NYC311Database:
             'CITY VEHICLE PLACARD COMPLAINT':'NOISE',
             'NOISE HELICOPTER':'NOISE',
             'NOISE VEHICLE':'NOISE',
-            'COLLECTION TRUCK NOISE	':'NOISE',
+            'COLLECTION TRUCK NOISE ':'NOISE',
             'DEAD DYING TREE':'DAMAGED TREE',
             'DEAD TREE':'DAMAGED TREE',
             'DRINKING':'DRUG ACTIVITY',
